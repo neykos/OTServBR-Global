@@ -20,20 +20,30 @@ Noodles ****]]
 	}
 }
 
+local achievementTable = {
+	-- [chestUniqueId] = "Achievement name",
+	-- Annihilator
+	[6085] = "Annihilator",
+	[6086] = "Annihilator",
+	[6087] = "Annihilator",
+	[6088] = "Annihilator"
+}
+
 local function playerAddItem(params, item)
 	local player = params.player
 	if not checkWeightAndBackpackRoom(player, params.weight, params.message) then
 		return false
 	end
 
-	if params.action then
+	if params.key then
 		local itemType = ItemType(params.itemid)
 		-- 23763 Is key of Dawnport
 		-- Needs independent verification because it cannot be set as "key" in items.xml
 		-- Because it generate bug in the item description
 		if itemType:isKey() or itemType:getId(23763) then
+			-- If is key not in container, uses the "isKey = true" variable
 			keyItem = player:addItem(params.itemid, params.count)
-			keyItem:setActionId(params.action)
+			keyItem:setActionId(params.storage)
 		end
 	else
 		addItem = player:addItem(params.itemid, params.count)
@@ -41,6 +51,10 @@ local function playerAddItem(params, item)
 		local attribute = AttributeTable[item.uid]
 		if attribute then
 			addItem:setAttribute(ITEM_ATTRIBUTE_TEXT, attribute.text)
+		end
+		local achievement = achievementTable[item.uid]
+		if achievement then
+			player:addAchievement(achievement)
 		end
 	end
 
@@ -56,15 +70,20 @@ local function playerAddContainerItem(params, item)
 	if params.action then
 		local itemType = ItemType(params.itemid)
 		if itemType:isKey() then
+			-- If is key inside container, uses the "keyAction" variable
 			keyItem = reward:addItem(params.itemid, params.count)
 			keyItem:setActionId(params.action)
-			return true
 		end
-
-		reward:addItem(params.itemid, params.count)
-		player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have found a " .. getItemName(params.itemBagName) .. ".")
-		player:setStorageValue(params.storage, 1)
 	end
+
+	local achievement = achievementTable[item.uid]
+	if achievement then
+		player:addAchievement(achievement)
+	end
+
+	reward:addItem(params.itemid, params.count)
+	player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have found a " .. getItemName(params.itemBagName) .. ".")
+	player:setStorageValue(params.storage, 1)
 	return true
 end
 
@@ -97,24 +116,23 @@ function questReward.onUse(player, item, fromPosition, itemEx, toPosition)
 	end
 
 	local container = player:addItem(setting.container)
-	for i = 1, #setting.itemReward do
-		local itemid = setting.itemReward[i][1]
-		local count = setting.itemReward[i][2]
+	for i = 1, #setting.reward do
+		local itemid = setting.reward[i][1]
+		local count = setting.reward[i][2]
 		local itemDescriptions = getItemDescriptions(itemid)
 		local itemArticle = itemDescriptions.article
 		local itemName = itemDescriptions.name
 		local itemBagName = setting.container
 		local itemBag = container
-		local action = setting.action
 
 		if not setting.container then
 			local addItemParams = {
 				player = player,
 				itemid = itemid,
-				action = action,
 				count = count,
 				weight = getItemWeight(itemid) * count,
-				storage = setting.storage
+				storage = setting.storage,
+				key = setting.isKey
 			}
 
 			if count > 1 and ItemType(itemid):isStackable() then
@@ -136,10 +154,10 @@ function questReward.onUse(player, item, fromPosition, itemEx, toPosition)
 			local addContainerItemParams = {
 				player = player,
 				itemid = itemid,
-				action = action,
 				count = count,
 				weight = setting.weight,
 				storage = setting.storage,
+				action = setting.keyAction,
 				itemBagName = itemBagName,
 				containerReward = itemBag
 			}

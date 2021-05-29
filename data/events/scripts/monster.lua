@@ -14,18 +14,26 @@ function Monster:onDropLoot(corpse)
 	if not player or player:getStamina() > 840 then
 		local monsterLoot = mType:getLoot()
 		for i = 1, #monsterLoot do
-			local item = corpse:createLootItem(monsterLoot[i])
-			if self:getName():lower() == (BoostedCreature.name):lower() then
-				local itemBoosted = corpse:createLootItem(monsterLoot[i])
+			local boolCharm = false
+			if player then
+				local charmType = player:getCharmMonsterType(CHARM_GUT)
+				if charmType and charmType:raceId() == mType:raceId() then
+					boolCharm = true
+				end
+			end
+		
+			local item = corpse:createLootItem(monsterLoot[i], boolCharm)
+			if self:getName():lower() == (Game.getBoostedCreature()):lower() then
+				local itemBoosted = corpse:createLootItem(monsterLoot[i], boolCharm)
 			end
 			if not item then
-				print('[Warning] DropLoot:', 'Could not add loot item to corpse.')
+				Spdlog.warn("[Monster:onDropLoot] - Could not add loot item to corpse.")
 			end
 		end
 
 		if player then
 			local text = {}
-			if self:getName():lower() == (BoostedCreature.name):lower() then
+			if self:getName():lower() == (Game.getBoostedCreature()):lower() then
 				 text = ("Loot of %s: %s (boosted loot)"):format(mType:getNameDescription(), corpse:getContentDescription())
 			else
 				 text = ("Loot of %s: %s"):format(mType:getNameDescription(), corpse:getContentDescription())			
@@ -52,6 +60,14 @@ end
 function Monster:onSpawn(position)
 	if self:getType():isRewardBoss() then
 		self:setReward(true)
+	end
+
+	if self:getName():lower() == "cobra scout" or 
+		self:getName():lower() == "cobra vizier" or 
+		self:getName():lower() == "cobra assassin" then
+		if getGlobalStorageValue(GlobalStorage.CobraBastionFlask) >= os.time() then
+			self:setHealth(self:getMaxHealth() * 0.75)
+		end
 	end
 
 	if not self:getType():canSpawn(position) then

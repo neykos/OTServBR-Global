@@ -13,7 +13,7 @@ HIRELING_OUTFIT_CHANGING = {}
 
 function DebugPrint(str)
 	if DEBUG == true then
-		print(str)
+		Spdlog.debug(str)
 	end
 end
 
@@ -24,7 +24,7 @@ function printTable(t)
 			str = str .. string.format( "\n %s = %s",tostring(k), tostring(v))
 		end
 	str = str.. '\n}'
-	print(str)
+	Spdlog.debug(str)
 end
 
 -- [[ Constants and ENUMS ]]
@@ -101,7 +101,7 @@ local function checkHouseAccess(hireling)
 	if house:getOwnerGuid() == hireling:getOwnerId() then return true end
 
 	-- player is not invited anymore, return to lamp
-	print('>> Returning Hireling:' .. hireling:getName() .. ' to owner Inbox')
+	Spdlog.info("Returning Hireling:" .. hireling:getName() .. " to owner Inbox")
 	local inbox = player:getSlotItem(CONST_SLOT_STORE_INBOX)
 	local lamp = inbox:addItem(HIRELING_LAMP_ID, 1)
 	lamp:setAttribute(ITEM_ATTRIBUTE_DESCRIPTION, "This mysterious lamp summons your very own personal hireling.\nThis item cannot be traded.\nThis magic lamp is the home of " .. hireling:getName() .. ".")
@@ -114,7 +114,7 @@ local function checkHouseAccess(hireling)
 end
 
 local function spawnNPCs()
-	print('>> Spawning Hirelings')
+	Spdlog.info("Spawning Hirelings")
 	local hireling
 	for i=1,#HIRELINGS do
 		hireling = HIRELINGS[i]
@@ -338,8 +338,7 @@ function Hireling:spawn()
 	npc:setName(self:getName())
 	local creature = Creature(npc)
 	creature:setOutfit(self:getOutfit())
-	-- figure later the right SpeechBubble
-	npc:setSpeechBubble(SPEECHBUBBLE_NORMAL)
+	npc:setSpeechBubble(7)
 
 	npc:place(self:getPosition())
 	creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
@@ -352,18 +351,18 @@ function Hireling:returnToLamp(player_id)
 
 	if self:getOwnerId() ~= player_id then
 		player:getPosition():sendMagicEffect(CONST_ME_POFF)
-		return player:sendTextMessage(MESSAGE_INFO_DESCR, "You are not the master of this hireling.")
+		return player:sendTextMessage(MESSAGE_FAILURE, "You are not the master of this hireling.")
 	end
 
 	if player:getFreeCapacity() < lampType:getWeight(1) then
 		player:getPosition():sendMagicEffect(CONST_ME_POFF)
-		return player:sendTextMessage(MESSAGE_INFO_DESCR, "You do not have enough capacity.")
+		return player:sendTextMessage(MESSAGE_FAILURE, "You do not have enough capacity.")
 	end
 
 	local inbox = player:getSlotItem(CONST_SLOT_STORE_INBOX)
 	if not inbox or inbox:getEmptySlots() == 0 then
 		player:getPosition():sendMagicEffect(CONST_ME_POFF)
-		return player:sendTextMessage(MESSAGE_INFO_DESCR, "You don't have enough room in your inbox.")
+		return player:sendTextMessage(MESSAGE_FAILURE, "You don't have enough room in your inbox.")
 	end
 
 
@@ -499,14 +498,14 @@ function Player:addNewHireling(name, sex)
 	local lampType = ItemType(HIRELING_LAMP_ID)
 	if self:getFreeCapacity() < lampType:getWeight(1) then
 		self:getPosition():sendMagicEffect(CONST_ME_POFF)
-		self:sendTextMessage(MESSAGE_INFO_DESCR, "You do not have enough capacity.")
+		self:sendTextMessage(MESSAGE_FAILURE, "You do not have enough capacity.")
 		return false
 	end
 
 	local inbox = self:getSlotItem(CONST_SLOT_STORE_INBOX)
 	if not inbox or inbox:getEmptySlots() == 0 then
 		self:getPosition():sendMagicEffect(CONST_ME_POFF)
-		self:sendTextMessage(MESSAGE_INFO_DESCR, "You don't have enough room in your inbox.")
+		self:sendTextMessage(MESSAGE_FAILURE, "You don't have enough room in your inbox.")
 		return false
 	end
 
@@ -550,6 +549,11 @@ local function addOutfit(msg, outfit)
 	msg:addByte(outfit.lookFeet)
 	msg:addByte(outfit.lookAddons)
 	msg:addU16(outfit.lookMount)
+	msg:addByte(0)
+	msg:addByte(0)
+	msg:addByte(0)
+	msg:addByte(0)
+	msg:addU16(0)
 end
 
 function Player:sendHirelingOutfitWindow(hireling)
@@ -580,6 +584,7 @@ function Player:sendHirelingOutfitWindow(hireling)
 	-- mounts disabled for hirelings
 	if client.version >= 1185 then
 		msg:addU16(0x00) --mounts count
+		msg:addU16(0x00) --familiar count
 		msg:addByte(0x00) -- dunno
 		msg:addByte(0x00) -- dunno2
 	else

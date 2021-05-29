@@ -60,7 +60,7 @@ function yasir.onStartup()
 	if yasirEnabled then
 		if math.random(100) <= yasirChance then
 			local randTown = config[math.random(#config)]
-			print('>> Yasir: '.. randTown.mapName ..'. ')
+			Spdlog.info(string.format("[WorldChanges] Yasir: %s", randTown.mapName))
 			iterateArea(
 			function(position)
 				local tile = Tile(position)
@@ -94,8 +94,10 @@ function yasir.onStartup()
 
 			Game.loadMap('data/world/yasir/' .. randTown.mapName .. '.otbm')
 			addEvent(spawnYasir, 5000, randTown.yasirPosition)
+			setGlobalStorageValue(GlobalStorage.Yasir, 1)
 		else
-			print('>> Yasir: not this time')
+			Spdlog.info("Yasir: not this time")
+			setGlobalStorageValue(GlobalStorage.Yasir, 0)
 		end
 	end
 end

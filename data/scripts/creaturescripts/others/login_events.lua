@@ -12,8 +12,8 @@ function loginEvents.onLogin(player)
 		"PlayerDeath",
 		"PreyLootBonusKill",
 		"RookgaardAdvance",
-		"SummonLogin",
-		"SummonThink",
+		"FamiliarLogin",
+		"AdvanceFamiliar",
 		--Quests
 		--Adventurers Guild Quest
 		"Thegreatdragonhuntkill",
@@ -96,6 +96,8 @@ function loginEvents.onLogin(player)
 		"KeeperKill",
 		"BossesKill",
 		"ZalamonKill",
+		-- The Rookie Guard
+		"VascalirRatKills"
 	}
 
 	for i = 1, #events do

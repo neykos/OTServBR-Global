@@ -42,9 +42,9 @@ maxPacketsPerSecond = 25
 maxItem = 2000
 maxContainer = 100
 
---- Version
-clientVersion = 1251
-clientVersionStr = "12.51"
+-- Version
+clientVersion = 1264
+clientVersionStr = "12.64"
 
 -- Depot Limit
 freeDepotLimit = 2000
@@ -53,6 +53,15 @@ depotBoxes = 18
 
 -- GameStore
 gamestoreByModules = true
+
+-- NOTE: Access only for Premium Account
+onlyPremiumAccount = false
+
+-- Customs
+weatherRain = false
+thunderEffect = false
+freeQuests = false
+allConsoleLog = false
 
 -- Deaths
 -- NOTE: Leave deathLosePercent as -1 if you want to use the default
@@ -81,6 +90,19 @@ pushDistanceDelay = 1500
 mapName = "otservbr"
 mapAuthor = "OTServBR"
 
+-- Party List limitations
+-- max distance in which players in party list are visible
+-- NOTE partyListMaxDistance set to 0 means no limit
+partyListMaxDistance = 30
+
+-- Custom Map
+-- NOTE: mapCustomEnabled: true = activate the map, false = disable the map
+mapCustomName = "otservbr-custom"
+mapCustomFile = "data/world/custom/otservbr-custom.otbm"
+mapCustomSpawn = "data/world/custom/otservbr-custom-spawn.xml"
+mapCustomAuthor = "OTServBR"
+mapCustomEnabled = true
+
 -- Market
 marketOfferDuration = 30 * 24 * 60 * 60
 premiumToCreateMarketOffer = true
@@ -97,7 +119,7 @@ mysqlSock = ""
 
 -- Misc.
 allowChangeOutfit = true
-freePremium = true
+freePremium = false
 kickIdlePlayerAfterMinutes = 15
 maxMessageBuffer = 4
 emoteSpells = false
@@ -152,3 +174,8 @@ ownerName = "OTServBR-Global"
 ownerEmail = ""
 url = "https://github.com/opentibiabr/otservbr-global"
 location = "South America"
+
+-- Sends Discord webhook notifications on startup, raids and shutdown.
+-- The URL layout is https://discord.com/api/webhooks/:id/:token
+-- Leave empty if you wish to disable.
+discordWebhookURL = ""

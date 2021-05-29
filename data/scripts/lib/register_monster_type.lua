@@ -28,6 +28,42 @@ registerMonsterType.experience = function(mtype, mask)
 		mtype:experience(mask.experience)
 	end
 end
+registerMonsterType.raceId = function(mtype, mask)
+	if mask.raceId then
+		mtype:raceId(mask.raceId)
+	end
+end
+registerMonsterType.Bestiary = function(mtype, mask)
+	if mask.Bestiary then
+		if mask.Bestiary.race then
+			mtype:Bestiaryrace(mask.Bestiary.race)
+		end
+		if mask.Bestiary.class then
+			mtype:Bestiaryclass(mask.Bestiary.class)
+		end
+		if mask.Bestiary.toKill then
+			mtype:BestiarytoKill(mask.Bestiary.toKill)
+		end
+		if mask.Bestiary.FirstUnlock then
+			mtype:BestiaryFirstUnlock(mask.Bestiary.FirstUnlock)
+		end
+		if mask.Bestiary.SecondUnlock then
+			mtype:BestiarySecondUnlock(mask.Bestiary.SecondUnlock)
+		end
+		if mask.Bestiary.CharmsPoints then
+			mtype:BestiaryCharmsPoints(mask.Bestiary.CharmsPoints)
+		end
+		if mask.Bestiary.Stars then
+			mtype:BestiaryStars(mask.Bestiary.Stars)
+		end
+		if mask.Bestiary.Occurrence then
+			mtype:BestiaryOccurrence(mask.Bestiary.Occurrence)
+		end
+		if mask.Bestiary.Locations then
+			mtype:BestiaryLocations(mask.Bestiary.Locations)
+		end
+	end
+end
 registerMonsterType.skull = function(mtype, mask)
 	if mask.skull then
 		mtype:skull(mask.skull)
@@ -73,6 +109,32 @@ registerMonsterType.corpse = function(mtype, mask)
 		mtype:corpseId(mask.corpse)
 	end
 end
+registerMonsterType.faction = function(mtype, mask)
+	if mask.faction then
+		mtype:faction(mask.faction)
+	end
+end
+registerMonsterType.targetPreferPlayer = function(mtype, mask)
+	if mask.targetPreferPlayer then
+		mtype:targetPreferPlayer(mask.targetPreferPlayer)
+	end
+end
+registerMonsterType.targetPreferMaster = function(mtype, mask)
+	if mask.targetPreferMaster then
+		mtype:targetPreferMaster(mask.targetPreferMaster)
+	end
+end
+registerMonsterType.enemyFactions = function(mtype, mask)
+	if mask.enemyFactions then
+		for _, enemyFaction in pairs(mask.enemyFactions) do
+			if not enemyFaction then
+				print("[Error - Loading monsters] Monster: \"" .. mtype:name() .. "\". Unknown enemy faction.")
+			else
+				mtype:enemyFactions(enemyFaction)
+			end
+		end
+	end
+end
 registerMonsterType.flags = function(mtype, mask)
 	if mask.flags then
 		if mask.flags.attackable ~= nil then
@@ -106,7 +168,8 @@ registerMonsterType.flags = function(mtype, mask)
 			mtype:isPet(mask.flags.pet)
 		end
 		if mask.flags.respawntype or mask.flags.respawnType then
-			print("[Error - Loading monsters] Monster: \"".. mtype:name() .. "\". Deprecated flag 'respawnType', use instead table 'respawnType = { period = RespawnPeriod_t, underground = boolean}'")
+			Spdlog.warn(string.format("[registerMonsterType.flags] - Monster: %s. Deprecated flag 'respawnType', use instead table 'respawnType = { period = RespawnPeriod_t, underground = boolean}'",
+				mtype:name()))
 		end
 		if mask.flags.canPushCreatures ~= nil then
 			mtype:canPushCreatures(mask.flags.canPushCreatures)
@@ -215,13 +278,20 @@ registerMonsterType.loot = function(mtype, mask)
 		local lootError = false
 		for _, loot in pairs(mask.loot) do
 			local parent = Loot()
-			if not parent:setId(loot.id) then
-				lootError = true
+			if loot.name then
+				if not parent:setIdFromName(loot.name) then
+					lootError = true
+				end
+			else
+				if not isInteger(loot.id) or loot.id < 1 then
+					lootError = true
+				end
+				parent:setId(loot.id)
 			end
 			if loot.subType or loot.charges then
 				parent:setSubType(loot.subType or loot.charges)
 			else
-    			local lType = ItemType(loot.id)
+    			local lType = ItemType(loot.name and loot.name or loot.id)
 				if lType and lType:getCharges() > 1 then
         			parent:setSubType(lType:getCharges())
 				end
@@ -268,13 +338,20 @@ registerMonsterType.loot = function(mtype, mask)
 			if loot.child then
 				for _, children in pairs(loot.child) do
 					local child = Loot()
-					if not child:setId(children.id) then
-						lootError = true
+					if children.name then
+						if not child:setIdFromName(children.name) then
+							lootError = true
+						end
+					else
+						if not isInteger(children.id) or children.id < 1 then
+							lootError = true
+						end
+						child:setId(children.id)
 					end
 					if children.subType or children.charges then
 						child:setSubType(children.subType or children.charges)
 					else
-    					local cType = ItemType(children.id)
+    					local cType = ItemType(children.name and children.name or children.id)
 						if cType and cType:getCharges() > 1 then
         					child:setSubType(cType:getCharges())
 						end
@@ -324,7 +401,7 @@ registerMonsterType.loot = function(mtype, mask)
 			mtype:addLoot(parent)
 		end
 		if lootError then
-			print("[Warning - end] Monster: \"".. mtype:name() .. "\" loot could not correctly be load.")
+			Spdlog.warn("[registerMonsterType.loot] - Monster: ".. mtype:name() .. " loot could not correctly be load")
 		end
 	end
 end
@@ -333,6 +410,24 @@ registerMonsterType.elements = function(mtype, mask)
 		for _, element in pairs(mask.elements) do
 			if element.type and element.percent then
 				mtype:addElement(element.type, element.percent)
+			end
+		end
+	end
+end
+registerMonsterType.reflects = function(mtype, mask)
+	if type(mask.reflects) == "table" then
+		for _, reflect in pairs(mask.reflects) do
+			if reflect.type and reflect.percent then
+				mtype:addReflect(reflect.type, reflect.percent)
+			end
+		end
+	end
+end
+registerMonsterType.heals = function(mtype, mask)
+	if type(mask.heals) == "table" then
+		for _, heal in pairs(mask.heals) do
+			if heal.type and heal.percent then
+				mtype:addHealing(heal.type, heal.percent)
 			end
 		end
 	end
@@ -397,8 +492,8 @@ function readSpell(incomingLua)
 					spell:setCombatType(incomingLua.type)
 				elseif incomingLua.name == "condition" then
 					spell:setConditionType(incomingLua.type)
-				else 
-					print("[Warning - register_monster_type] Monster \"".. mtype:name() .. "\": Loading spell \"".. incomingLua.name .. "\". Parameter type applies only for condition and combat.")
+				else
+					Spdlog.warn("[readSpell] - Monster ".. mtype:name() .. ": Loading spell ".. incomingLua.name .. ". Parameter type applies only for condition and combat.")
 				end
 			end
 			if incomingLua.interval then

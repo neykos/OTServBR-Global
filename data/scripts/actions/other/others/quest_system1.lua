@@ -1,5 +1,4 @@
 local specialQuests = {
-	[2215] = Storage.TheAnnihilator.AnnihilatorDone,
 	[2016] = Storage.DreamersChallenge.Reward,
 	[10544] = Storage.PitsOfInferno.WeaponReward,
 	[12513] = Storage.ThievesGuild.Reward,
@@ -22,12 +21,6 @@ local tutorialIds = {
 	[50082] = 6,
 	[50084] = 10,
 	[50086] = 11
-}
-
-local achievementChest = {
-	-- [item.actionid] = "Achievement name",
-	-- Annihilator sample
-	[2215] = "Annihilator",
 }
 
 local hotaQuest = {50950, 50951, 50952, 50953, 50954, 50955}
@@ -92,7 +85,7 @@ function questSystem1.onUse(player, item, fromPosition, target, toPosition, isHo
 		for i = 1, size do
 			local tmp = items[i]
 			if reward:addItemEx(tmp) ~= RETURNVALUE_NOERROR then
-				print('[Warning] QuestSystem:', 'Could not add quest reward to container')
+				Spdlog.warn("[questSystem1.onUse] - Could not add quest reward to container")
 			end
 		end
 		local ret = ItemType(reward.itemid)
@@ -128,11 +121,6 @@ function questSystem1.onUse(player, item, fromPosition, target, toPosition, isHo
 		if player:getStorageValue(Storage.TheAncientTombs.DefaultStart) ~= 1 then
 			player:setStorageValue(Storage.TheAncientTombs.DefaultStart, 1)
 		end
-	end
-
-	-- add Achievements
-	if(achievementChest[item.actionid])then
-		player:addAchievement(achievementChest[item.actionid])
 	end
 
 	player:sendTextMessage(MESSAGE_EVENT_ADVANCE, 'You have found ' .. result .. '.')
